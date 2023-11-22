@@ -7,7 +7,34 @@
     //Dividir el array de los tags
     $almacenarTags = explode(",", $tagsTexto);
     //Eliminar espacio entre las palabras
-    $quitarEspaciosTags = trim($almacenarTags);
+    $quitarEspaciosTags = trim($almacenarTags[0]);
+
+    if(isset($_POST['categoria']) && isset($_POST['tags'])){
+        $categoria = $_POST['categoria'];
+        $tag = $_POST['tags'];
+
+        if(count($almacenarTags) > 0){
+            foreach($almacenarTags as $etiqueta){
+                //Eliminar espacio entre las palabras
+                $valor = trim($etiqueta);
+                
+                // Comprobar si el tag ya existe en la base de datos
+                $check = $conn->prepare("SELECT * FROM tags WHERE Nombre = ?");
+                $check->execute([$valor]);
+                $tagExists = $check->fetch();
+            
+                // Si el tag no existe, entonces lo insertamos
+                if (!$tagExists) {
+                    $sql = "INSERT INTO tags(Nombre) VALUES ('$valor')";
+                    // usar exec() porque no devuelva resultados
+                    $conn->exec($sql);
+                    echo "Nuevo registro creado con éxito";
+                } else {
+                    echo "El tag '$valor' ya existe en la base de datos";
+                }
+            }
+        }
+    }
     
 ?>
 <!DOCTYPE html>
@@ -28,9 +55,10 @@
             $categorias = $consulta->fetchAll(PDO::FETCH_ASSOC);?>
         <!--Muestra el nombre de los productos en el desplegable-->
         <?php foreach ($categorias as $categoria): ?>
-            <input type="checkbox" name="" id="<?php echo $categoria['ID']?>"><?php echo $categoria['Nombre']; ?>
+            <input type="checkbox" name="categoria" id="<?php echo $categoria['ID']?>"><?php echo $categoria['Nombre']; ?>
         <?php endforeach; ?>
-        <textarea name="tags" id="tags" cols="30" rows="10">hola</textarea>
+        <textarea name="tags" id="tags" cols="30" rows="10"></textarea>
+        <input type="submit" value="Enviar">
     </form>
 </body>
 </html>
